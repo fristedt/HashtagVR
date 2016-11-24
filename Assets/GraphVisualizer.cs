@@ -24,7 +24,7 @@ public class GraphVisualizer : MonoBehaviour {
     public GameObject edgePrefab;
 
     // Use this for initialization
-    void Start () {
+    void Awake () {
 		matrix = new int[NumNodes, NumNodes];
 		for (int i = 0; i < NumNodes; i++) {
 			for (int j = i + 1; j < NumNodes; j++) {
