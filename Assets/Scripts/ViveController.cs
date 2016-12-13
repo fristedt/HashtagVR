@@ -82,17 +82,17 @@ public class ViveController : MonoBehaviour
                     Vector3 scale = new Vector3(offset.magnitude, offset.magnitude, offset.magnitude);
                     heldObject.transform.localScale = scale;
 
-                    Transform childYeah = heldObject.transform.GetChild(0);
-                    Debug.Log(Vector3.Distance(camera.transform.position, childYeah.position));
-                    if (Vector3.Distance(camera.transform.position, childYeah.position) > 0.35f)
-                    {
-                        childYeah.gameObject.SetActive(true);
-                    } else
-                    {
-                        childYeah.gameObject.SetActive(false);
-                    }
-                    float childScaleMultiplier = 2f;
-                    childYeah.localScale = new Vector3(scale.x * childScaleMultiplier, scale.y * childScaleMultiplier, 0.1f);
+                    //Transform childYeah = heldObject.transform.GetChild(0);
+                    //if (Vector3.Distance(camera.transform.position, childYeah.position) > 0.35f)
+                    //{
+                    //    childYeah.gameObject.SetActive(true);
+                    //}
+                    //else
+                    //{
+                    //    childYeah.gameObject.SetActive(false);
+                    //}
+                    //float childScaleMultiplier = 2f;
+                    //childYeah.localScale = new Vector3(scale.x * childScaleMultiplier, scale.y * childScaleMultiplier, 0.1f);
                 }
             }
         }

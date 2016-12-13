@@ -51,7 +51,7 @@ namespace UnityStandardAssets.ImageEffects
             Transform camtr = cam.transform;
 
             Vector3[] frustumCorners = new Vector3[4];
-            cam.CalculateFrustumCorners(new Rect(0, 0, 1, 1), cam.farClipPlane, cam.stereoActiveEye, frustumCorners);
+            //cam.CalculateFrustumCorners(new Rect(0, 0, 1, 1), cam.farClipPlane, cam.stereoActiveEye, frustumCorners);
             var bottomLeft = camtr.TransformVector(frustumCorners[0]);
             var topLeft = camtr.TransformVector(frustumCorners[1]);
             var topRight = camtr.TransformVector(frustumCorners[2]);
