@@ -27,11 +27,6 @@ public class ViveController : MonoBehaviour
         inTrigger = new List<GameObject>();
 
         GameObject[] allNodes = GameObject.FindGameObjectsWithTag("Grabbable");
-        foreach (GameObject g in allNodes)
-        {
-            Transform childYeah = g.transform.GetChild(0);
-            childYeah.gameObject.SetActive(false);
-        }
     }
 
     void Start()
@@ -68,7 +63,7 @@ public class ViveController : MonoBehaviour
                 Rigidbody rb = hit.transform.GetComponent<Rigidbody>();
                 if (rb != null)
                 {
-                    rb.AddForce(diff.normalized * 100000);
+                    rb.AddForce(diff.normalized * 100);
                     lr.startColor = Color.red;
                     lr.endColor = Color.red;
                     positions[1] = hit.point;
@@ -96,8 +91,10 @@ public class ViveController : MonoBehaviour
 
             foreach (Collider obj in objs)
             {
-                obj.GetComponent<Rigidbody>().AddForce((transform.position - obj.transform.position) * 1000000);
+                Vector3 diff = transform.position - obj.transform.position;
+                obj.GetComponent<Rigidbody>().AddForce(diff.normalized * 300);
                 obj.transform.localScale += new Vector3(scale, scale, scale);
+                obj.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
             }
 
 

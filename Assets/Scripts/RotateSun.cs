@@ -12,5 +12,7 @@ public class RotateSun : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         transform.Rotate(rotation * Time.deltaTime);
+
+        GetComponent<Rigidbody>().mass = 1000 * transform.localScale.x; 
     }
 }
