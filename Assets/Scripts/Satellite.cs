@@ -23,7 +23,8 @@ public class Satellite : MonoBehaviour {
 	void Update () {
 	    foreach (GameObject planet in planets)
         {
-            float planetGravity = planet.transform.localScale.x;
+            float radius = planet.GetComponent<Rigidbody>().mass;
+            float planetGravity = radius * 0.001f;
             Vector3 directionToPlanet = planet.transform.position - transform.position;
             float gravity = planetGravity / Vector3.SqrMagnitude(directionToPlanet);
 
