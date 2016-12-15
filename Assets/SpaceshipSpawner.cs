@@ -7,8 +7,7 @@ public class SpaceshipSpawner : MonoBehaviour {
     public GameObject spaceship;
 
     float lastTime;
-    float spawnTime = 2f;
-
+    float spawnTime = 10f;
 	// Use this for initialization
 	void Start () {
 		
@@ -32,6 +31,5 @@ public class SpaceshipSpawner : MonoBehaviour {
 
         Vector3 spawnPos = new Vector3(800 * posneg + Random.value * distanceFromCube, 10 * posneg, 800 * posneg + Random.value * distanceFromCube);
         GameObject s = Instantiate(spaceship, spawnPos, Quaternion.identity);
-        s.transform.forward = Vector3.zero - spawnPos;
     }
 }
