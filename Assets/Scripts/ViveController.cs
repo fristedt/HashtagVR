@@ -8,6 +8,7 @@ public class ViveController : MonoBehaviour
 {
     public ViveController otherController;
     public GameObject heldObject;
+    public GameObject distortionSphere;
 
     private List<GameObject> inTrigger;
 
@@ -17,6 +18,7 @@ public class ViveController : MonoBehaviour
     GameObject camera;
 
     Vector3[] positions = new Vector3[2];
+    int grabbableMask;
 
     void Awake()
     {
@@ -41,6 +43,9 @@ public class ViveController : MonoBehaviour
         lr.endWidth = 0.05f;
         lr.startColor = Color.cyan;
         lr.endColor = Color.cyan;
+        grabbableMask = LayerMask.GetMask("Grabbable");
+
+        distortionSphere.SetActive(false);
     }
 
     void FixedUpdate()
@@ -53,109 +58,136 @@ public class ViveController : MonoBehaviour
 
         if (thisDevice.GetPress(SteamVR_Controller.ButtonMask.Touchpad))
         {
+            positions[1] = transform.position + transform.forward * 1000;
+            lr.enabled = true;
             RaycastHit hit;
-            if (Physics.Raycast(transform.position, transform.forward, out hit))
+            Ray ray = new Ray(transform.position, transform.forward);
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, grabbableMask))
             {
                 Vector3 diff = (transform.position - hit.transform.position);
-                Debug.DrawRay(hit.transform.position, diff, Color.red);
                 Rigidbody rb = hit.transform.GetComponent<Rigidbody>();
                 if (rb != null)
                 {
                     rb.AddForce(diff.normalized * 100000);
-                    lr.enabled = true;
-                    positions[1] = hit.transform.position;
-                    lr.SetPositions(positions);
+                    lr.startColor = Color.red;
+                    lr.endColor = Color.red;
+                    positions[1] = hit.point;
                 }
             }
             else
-                lr.enabled = false;
+            {
+                lr.startColor = Color.cyan;
+                lr.endColor = Color.cyan;
+            }
+            lr.SetPositions(positions);
         }
         else
+        {
             lr.enabled = false;
+        }
 
-        Debug.DrawRay(transform.position, transform.forward * 5, Color.cyan);
-
-        if (thisDevice.GetTouchDown(SteamVR_Controller.ButtonMask.Trigger) && heldObject == null)
+        if (thisDevice.GetTouch(SteamVR_Controller.ButtonMask.Trigger))
         {
+            distortionSphere.SetActive(true);
+            Collider[] objs = Physics.OverlapSphere(transform.position, distortionSphere.transform.localScale.x, grabbableMask);
 
-            float minDist = float.MaxValue;
-            GameObject closest = null;
-            foreach (GameObject go in inTrigger)
+            Vector2 touch = SteamVR_Controller.Input(myIndex).GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
+            float scale = touch.y / 100;
+
+            foreach (Collider obj in objs)
             {
-                if (go == null)
-                    continue;
-                if (!go.CompareTag("Grabbable"))
-                    continue;
-                float distance = Vector3.Distance(go.transform.position, transform.position);
-                if (distance < minDist)
-                {
-                    minDist = distance;
-                    closest = go;
-                }
+                obj.GetComponent<Rigidbody>().AddForce((transform.position - obj.transform.position) * 1000000);
+                obj.transform.localScale += new Vector3(scale, scale, scale);
             }
-            if (closest != null)
-            {
-                closest.transform.parent = transform;
-                closest.transform.localPosition = Vector3.zero;
-                heldObject = closest;
-                heldObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
-                heldObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
-                Grabbable grabbable = heldObject.GetComponent<Grabbable>();
-                if (grabbable.currentlyHeldBy == -1)
-                    grabbable.currentlyHeldBy = (myIndex);
-            }
-        }
 
-        try
+
+        }
+        else
         {
-            var otherDevice = SteamVR_Controller.Input((int)otherTrackedObj.index);
-            if (thisDevice.GetTouch(SteamVR_Controller.ButtonMask.Trigger) && otherDevice.GetTouch(SteamVR_Controller.ButtonMask.Trigger))
-            {
-                Grabbable grabbable = heldObject.GetComponent<Grabbable>();
-                if (heldObject == otherController.heldObject)
-                {
-                    Vector3 offset = transform.position - otherController.transform.position;
-                    heldObject.transform.position = transform.position - offset / 2;
-                    Vector3 scale = new Vector3(offset.magnitude, offset.magnitude, offset.magnitude);
-                    heldObject.transform.localScale = scale;
-
-                    //Transform childYeah = heldObject.transform.GetChild(0);
-                    //if (Vector3.Distance(camera.transform.position, childYeah.position) > 0.35f)
-                    //{
-                    //    childYeah.gameObject.SetActive(true);
-                    //}
-                    //else
-                    //{
-                    //    childYeah.gameObject.SetActive(false);
-                    //}
-                    //float childScaleMultiplier = 2f;
-                    //childYeah.localScale = new Vector3(scale.x * childScaleMultiplier, scale.y * childScaleMultiplier, 0.1f);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-
+            distortionSphere.SetActive(false);
         }
 
+        //if (thisDevice.GetTouchDown(SteamVR_Controller.ButtonMask.Trigger) && heldObject == null)
+        //{
 
-        if (thisDevice.GetTouchUp(SteamVR_Controller.ButtonMask.Trigger) && heldObject != null)
-        {
-            Rigidbody rb = heldObject.GetComponent<Rigidbody>();
-            rb.velocity = trackedObj.transform.parent.TransformVector(thisDevice.velocity);
-            rb.angularVelocity = trackedObj.transform.parent.TransformVector(thisDevice.angularVelocity);
+        //    float minDist = float.MaxValue;
+        //    GameObject closest = null;
+        //    foreach (GameObject go in inTrigger)
+        //    {
+        //        if (go == null)
+        //            continue;
+        //        if (!go.CompareTag("Grabbable"))
+        //            continue;
+        //        float distance = Vector3.Distance(go.transform.position, transform.position);
+        //        if (distance < minDist)
+        //        {
+        //            minDist = distance;
+        //            closest = go;
+        //        }
+        //    }
+        //    if (closest != null)
+        //    {
+        //        closest.transform.parent = transform;
+        //        closest.transform.localPosition = Vector3.zero;
+        //        heldObject = closest;
+        //        heldObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        //        heldObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        //        Grabbable grabbable = heldObject.GetComponent<Grabbable>();
+        //        if (grabbable.currentlyHeldBy == -1)
+        //            grabbable.currentlyHeldBy = (myIndex);
+        //    }
+        //}
 
-            Transform childYeah = heldObject.transform.GetChild(0);
-            childYeah.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-            childYeah.gameObject.SetActive(false);
+        //try
+        //{
+        //    var otherDevice = SteamVR_Controller.Input((int)otherTrackedObj.index);
+        //    if (thisDevice.GetTouch(SteamVR_Controller.ButtonMask.Trigger) && otherDevice.GetTouch(SteamVR_Controller.ButtonMask.Trigger))
+        //    {
+        //        Grabbable grabbable = heldObject.GetComponent<Grabbable>();
+        //        if (heldObject == otherController.heldObject)
+        //        {
+        //            Vector3 offset = transform.position - otherController.transform.position;
+        //            heldObject.transform.position = transform.position - offset / 2;
+        //            Vector3 scale = new Vector3(offset.magnitude, offset.magnitude, offset.magnitude);
+        //            heldObject.transform.localScale = scale;
 
-            Grabbable grabbable = heldObject.GetComponent<Grabbable>();
-            if (grabbable.currentlyHeldBy == myIndex)
-                heldObject.GetComponent<Grabbable>().currentlyHeldBy = -1;
-            heldObject.transform.parent = null;
-            heldObject = null;
+        //            //Transform childYeah = heldObject.transform.GetChild(0);
+        //            //if (Vector3.Distance(camera.transform.position, childYeah.position) > 0.35f)
+        //            //{
+        //            //    childYeah.gameObject.SetActive(true);
+        //            //}
+        //            //else
+        //            //{
+        //            //    childYeah.gameObject.SetActive(false);
+        //            //}
+        //            //float childScaleMultiplier = 2f;
+        //            //childYeah.localScale = new Vector3(scale.x * childScaleMultiplier, scale.y * childScaleMultiplier, 0.1f);
+        //        }
+        //    }
+        //}
+        //catch (Exception e)
+        //{
 
-        }
+        //}
+
+
+        //if (thisDevice.GetTouchUp(SteamVR_Controller.ButtonMask.Trigger) && heldObject != null)
+        //{
+        //    Rigidbody rb = heldObject.GetComponent<Rigidbody>();
+        //    rb.velocity = trackedObj.transform.parent.TransformVector(thisDevice.velocity);
+        //    rb.angularVelocity = trackedObj.transform.parent.TransformVector(thisDevice.angularVelocity);
+
+        //    Transform childYeah = heldObject.transform.GetChild(0);
+        //    childYeah.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+        //    childYeah.gameObject.SetActive(false);
+
+        //    Grabbable grabbable = heldObject.GetComponent<Grabbable>();
+        //    if (grabbable.currentlyHeldBy == myIndex)
+        //        heldObject.GetComponent<Grabbable>().currentlyHeldBy = -1;
+        //    heldObject.transform.parent = null;
+        //    heldObject = null;
+
+        //}
     }
 
     void OnTriggerEnter(Collider collider)
