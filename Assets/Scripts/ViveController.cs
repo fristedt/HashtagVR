@@ -16,6 +16,8 @@ public class ViveController : MonoBehaviour
     FixedJoint joint;
     GameObject camera;
 
+    Vector3[] positions = new Vector3[2];
+
     void Awake()
     {
         trackedObj = GetComponent<SteamVR_TrackedObject>();
@@ -33,12 +35,45 @@ public class ViveController : MonoBehaviour
     void Start()
     {
         camera = GameObject.Find("Camera (eye)");
+        LineRenderer lr = GetComponent<LineRenderer>();
+        lr.enabled = false;
+        lr.startWidth = 0.05f;
+        lr.endWidth = 0.05f;
+        lr.startColor = Color.cyan;
+        lr.endColor = Color.cyan;
     }
 
     void FixedUpdate()
     {
         int myIndex = (int)trackedObj.index;
         var thisDevice = SteamVR_Controller.Input(myIndex);
+
+        LineRenderer lr = GetComponent<LineRenderer>();
+        positions[0] = transform.position;
+
+        if (thisDevice.GetPress(SteamVR_Controller.ButtonMask.Touchpad))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, transform.forward, out hit))
+            {
+                Vector3 diff = (transform.position - hit.transform.position);
+                Debug.DrawRay(hit.transform.position, diff, Color.red);
+                Rigidbody rb = hit.transform.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.AddForce(diff.normalized * 100000);
+                    lr.enabled = true;
+                    positions[1] = hit.transform.position;
+                    lr.SetPositions(positions);
+                }
+            }
+            else
+                lr.enabled = false;
+        }
+        else
+            lr.enabled = false;
+
+        Debug.DrawRay(transform.position, transform.forward * 5, Color.cyan);
 
         if (thisDevice.GetTouchDown(SteamVR_Controller.ButtonMask.Trigger) && heldObject == null)
         {
@@ -63,6 +98,8 @@ public class ViveController : MonoBehaviour
                 closest.transform.parent = transform;
                 closest.transform.localPosition = Vector3.zero;
                 heldObject = closest;
+                heldObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                heldObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
                 Grabbable grabbable = heldObject.GetComponent<Grabbable>();
                 if (grabbable.currentlyHeldBy == -1)
                     grabbable.currentlyHeldBy = (myIndex);
